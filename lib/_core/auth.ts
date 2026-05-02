@@ -55,6 +55,8 @@ async function secureDel(key: string): Promise<void> {
   await SecureStore.deleteItemAsync(key);
 }
 
+// NOTE: "session token" historically mapped to the cached Firebase ID token.
+// Keep these wrappers for backward compatibility with older call sites.
 export async function getIdToken(): Promise<string | null> {
   const auth = getFirebaseAuth();
   if (auth.currentUser) {
@@ -66,6 +68,14 @@ export async function getIdToken(): Promise<string | null> {
 
 export async function cacheIdToken(token: string): Promise<void> {
   await secureSet(ID_TOKEN_KEY, token);
+}
+
+export async function setSessionToken(token: string): Promise<void> {
+  await cacheIdToken(token);
+}
+
+export async function getSessionToken(): Promise<string | null> {
+  return getIdToken();
 }
 
 export async function getUserInfo(): Promise<User | null> {

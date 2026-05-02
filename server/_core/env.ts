@@ -22,6 +22,14 @@ export const ENV = {
   // OpenAI / LLM (Gemini via OpenAI-compatible endpoint if needed)
   openAiApiKey: process.env.OPENAI_API_KEY ?? "",
 
+  // FORGE (texturing/image generation proxy)
+  forgeApiUrl: process.env.FORGE_API_URL ?? "",
+  forgeApiKey: process.env.FORGE_API_KEY ?? "",
+
+  // OAuth server integration
+  oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
+  appId: process.env.APP_ID ?? "",
+
   // RevenueCat webhook secret
   revenueCatWebhookSecret: process.env.REVENUECAT_WEBHOOK_SECRET ?? "",
 

@@ -102,6 +102,7 @@ export default function RootLayout() {
               <Stack.Screen name="record" options={{ presentation: "fullScreenModal" }} />
               <Stack.Screen name="memory/[id]" />
               <Stack.Screen name="thread/[theme]" />
+              <Stack.Screen name="timeline" />
               <Stack.Screen name="invite" />
               <Stack.Screen name="oauth/callback" />
             </Stack>

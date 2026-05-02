@@ -43,17 +43,25 @@ export default function OAuthCallback() {
                 typeof atob !== "undefined"
                   ? atob(params.user)
                   : Buffer.from(params.user, "base64").toString("utf-8");
-              const userData = JSON.parse(userJson);
-              const userInfo: Auth.User = {
-                id: userData.id,
-                openId: userData.openId,
-                name: userData.name,
-                email: userData.email,
-                loginMethod: userData.loginMethod,
-                lastSignedIn: new Date(userData.lastSignedIn || Date.now()),
-              };
-              await Auth.setUserInfo(userInfo);
-              console.log("[OAuth] User info stored:", userInfo);
+              const userData: Record<string, unknown> = JSON.parse(userJson);
+
+              const uid =
+                (typeof userData.uid === "string" && userData.uid) ||
+                (typeof userData.openId === "string" && userData.openId) ||
+                (typeof userData.id === "string" && userData.id);
+
+              if (!uid) {
+                console.warn("[OAuth] User payload missing uid/openId/id; skipping setUserInfo");
+              } else {
+                const userInfo: Auth.User = {
+                  uid,
+                  email: typeof userData.email === "string" ? userData.email : null,
+                  name: typeof userData.name === "string" ? userData.name : null,
+                  role: userData.role === "admin" ? "admin" : "user",
+                };
+                await Auth.setUserInfo(userInfo);
+                console.log("[OAuth] User info stored:", userInfo);
+              }
             } catch (err) {
               console.error("[OAuth] Failed to parse user data:", err);
             }
@@ -175,53 +183,11 @@ export default function OAuthCallback() {
           return;
         }
 
-        // Exchange code for session token
-        console.log("[OAuth] Exchanging code for session token...", {
-          code: code.substring(0, 20) + "...",
-          state: state.substring(0, 20) + "...",
-        });
-        const result = await Api.exchangeOAuthCode(code, state);
-        console.log("[OAuth] Exchange result:", {
-          hasSessionToken: !!result.sessionToken,
-          hasUser: !!result.user,
-        });
-
-        if (result.sessionToken) {
-          console.log("[OAuth] Session token received, storing...");
-          // Store session token
-          await Auth.setSessionToken(result.sessionToken);
-          console.log("[OAuth] Session token stored successfully");
-
-          // Store user info if available
-          if (result.user) {
-            console.log("[OAuth] User data received:", result.user);
-            const userInfo: Auth.User = {
-              id: result.user.id,
-              openId: result.user.openId,
-              name: result.user.name,
-              email: result.user.email,
-              loginMethod: result.user.loginMethod,
-              lastSignedIn: new Date(result.user.lastSignedIn || Date.now()),
-            };
-            await Auth.setUserInfo(userInfo);
-            console.log("[OAuth] User info stored:", userInfo);
-          } else {
-            console.log("[OAuth] No user data in result");
-          }
-
-          setStatus("success");
-          console.log("[OAuth] Authentication successful, redirecting to home...");
-
-          // Redirect to home after a short delay
-          setTimeout(() => {
-            console.log("[OAuth] Executing redirect...");
-            router.replace("/(tabs)");
-          }, 1000);
-        } else {
-          console.error("[OAuth] No session token in result:", result);
-          setStatus("error");
-          setErrorMessage("No session token received");
-        }
+        // Exchange code for session token is not available in this server build.
+        // This screen expects the redirect to include sessionToken (and optionally user).
+        setStatus("error");
+        setErrorMessage("OAuth code exchange not supported. Redirect must include sessionToken.");
+        return;
       } catch (error) {
         console.error("[OAuth] Callback error:", error);
         setStatus("error");
