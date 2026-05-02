@@ -54,10 +54,11 @@ function SettingRow({
 export default function SettingsScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { state, updateMember } = useStore();
+  const { state, updateMember, dispatch } = useStore();
   const [editingProfilePicture, setEditingProfilePicture] = useState(false);
 
   const { userName, userRole, familyVault, members, memories } = state;
+  const isOrganizer = userRole === 'organizer';
   const currentMember = members[0];
 
   const handleUpdateProfilePicture = async () => {
@@ -93,6 +94,55 @@ export default function SettingsScreen() {
     );
   };
 
+  // ELDER/RELATIVE: Minimal settings view
+  if (!isOrganizer) {
+    return (
+      <ScreenContainer containerClassName="bg-background">
+        <ScrollView
+          style={{ flex: 1, backgroundColor: 'transparent' }}
+          contentContainerStyle={[styles.container, { backgroundColor: 'transparent' }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: colors.foreground }]}>My Profile</Text>
+          </View>
+
+          {/* Profile Card */}
+          <View style={[styles.profileCard, { backgroundColor: colors.primary }]}>
+            <View style={styles.profileAvatar}>
+              <Text style={styles.profileAvatarText}>
+                {userName ? userName[0].toUpperCase() : '?'}
+              </Text>
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>{userName || 'Unknown'}</Text>
+              <Text style={styles.profileRole}>{userRole ? ROLE_LABELS[userRole] : ''}</Text>
+            </View>
+          </View>
+
+          {/* Vault Info */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.muted }]}>Family Vault</Text>
+            <SettingRow
+              emoji="📖"
+              label={familyVault?.name ?? 'No vault'}
+              value={`${memories.length} stories`}
+            />
+          </View>
+
+          {/* Info Text */}
+          <View style={[styles.infoBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.infoText, { color: colors.foreground }]}>
+              You're part of {familyVault?.name || 'a family vault'}. You can record stories and view memories shared by family members.
+            </Text>
+          </View>
+        </ScrollView>
+      </ScreenContainer>
+    );
+  }
+
+  // ORGANIZER: Full admin settings
   return (
     <ScreenContainer containerClassName="bg-background">
       <ScrollView
@@ -302,5 +352,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     marginTop: 8,
+  },
+  infoBox: {
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  infoText: {
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: 'center',
   },
 });

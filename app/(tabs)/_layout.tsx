@@ -4,14 +4,17 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ImageBackground, View, Platform } from 'react-native';
 import { useColors } from '@/hooks/use-colors';
+import { useStore } from '@/lib/store';
 
 const WOOD_BG = require('@/assets/images/wood-bg.jpg');
 
 export default function TabLayout() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { state } = useStore();
   const bottomPadding = Platform.OS === 'web' ? 12 : Math.max(insets.bottom, 8);
   const tabBarHeight = 56 + bottomPadding;
+  const isElder = state.userRole === 'elder';
 
   return (
     <Tabs
@@ -58,13 +61,16 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="book.fill" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ color }) => <IconSymbol size={26} name="magnifyingglass" color={color} />,
-        }}
-      />
+      {/* Search - Hidden for Elder */}
+      {!isElder && (
+        <Tabs.Screen
+          name="search"
+          options={{
+            title: 'Search',
+            tabBarIcon: ({ color }) => <IconSymbol size={26} name="magnifyingglass" color={color} />,
+          }}
+        />
+      )}
       <Tabs.Screen
         name="settings"
         options={{
