@@ -79,6 +79,57 @@ export default function HomeScreen() {
     setShowReminder(false);
   };
 
+  // ELDER INTERFACE: Huge buttons, minimal clutter
+  if (isElder) {
+    return (
+      <ScreenContainer containerClassName="bg-background">
+        <ScrollView
+          style={{ flex: 1, backgroundColor: 'transparent' }}
+          contentContainerStyle={[styles.elderContainer, { backgroundColor: 'transparent' }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Greeting */}
+          <Text style={[styles.elderGreeting, { color: colors.foreground }]}>{greeting}, {userName}!</Text>
+
+          {/* Today's Prompt */}
+          <View style={[styles.elderPromptBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.elderPromptLabel, { color: colors.muted }]}>Today's Question</Text>
+            <Text style={[styles.elderPromptText, { color: colors.foreground }]}>{todaysPrompt.text}</Text>
+          </View>
+
+          {/* HUGE Record Button */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.elderRecordButton,
+              { backgroundColor: colors.primary },
+              pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
+            ]}
+            onPress={handleRecordAnswer}
+          >
+            <Text style={styles.elderRecordEmoji}>🎙️</Text>
+            <Text style={styles.elderRecordText}>Record My Story</Text>
+          </Pressable>
+
+          {/* Recent Memories */}
+          {recentMemories.length > 0 && (
+            <View style={styles.elderRecentSection}>
+              <Text style={[styles.elderRecentTitle, { color: colors.foreground }]}>Recent Stories</Text>
+              <FlatList
+                data={recentMemories}
+                keyExtractor={m => m.id}
+                scrollEnabled={false}
+                renderItem={({ item }) => (
+                  <MemoryCard memory={item} onPress={() => handleViewMemory(item)} />
+                )}
+              />
+            </View>
+          )}
+        </ScrollView>
+      </ScreenContainer>
+    );
+  }
+
+  // ORGANIZER/RELATIVE INTERFACE: Standard layout
   return (
     <ScreenContainer containerClassName="bg-background">
       <ScrollView
@@ -87,7 +138,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Daily Reminder Banner */}
-        {showReminder && isElder && (
+        {showReminder && (
           <View style={[styles.reminderBanner, { backgroundColor: colors.accent || colors.primary }]}>
             <View style={styles.reminderContent}>
               <Text style={styles.reminderEmoji}>⏰</Text>
@@ -137,14 +188,12 @@ export default function HomeScreen() {
             </Text>
           </Pressable>
 
-          {!isElder && (
-            <Pressable
-              style={({ pressed }) => [styles.skipLink, pressed && { opacity: 0.6 }]}
-              onPress={() => router.push('/record' as never)}
-            >
-              <Text style={styles.skipText}>or record a different story</Text>
-            </Pressable>
-          )}
+          <Pressable
+            style={({ pressed }) => [styles.skipLink, pressed && { opacity: 0.6 }]}
+            onPress={() => router.push('/record' as never)}
+          >
+            <Text style={styles.skipText}>or record a different story</Text>
+          </Pressable>
         </View>
 
         {/* Stats Row */}
@@ -391,9 +440,63 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  reminderCloseText: {
+   reminderCloseText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
+  },
+  // Elder Interface Styles
+  elderContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 60,
+    gap: 32,
+  },
+  elderGreeting: {
+    fontSize: 48,
+    fontFamily: Fonts?.display,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  elderPromptBox: {
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    gap: 12,
+  },
+  elderPromptLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  elderPromptText: {
+    fontSize: 28,
+    fontFamily: Fonts?.display,
+    fontWeight: '700',
+    lineHeight: 38,
+  },
+  elderRecordButton: {
+    borderRadius: 20,
+    paddingVertical: 48,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  elderRecordEmoji: {
+    fontSize: 72,
+  },
+  elderRecordText: {
+    color: '#FFFFFF',
+    fontSize: 32,
+    fontFamily: Fonts?.display,
+    fontWeight: '700',
+  },
+  elderRecentSection: {
+    gap: 16,
+  },
+  elderRecentTitle: {
+    fontSize: 24,
+    fontFamily: Fonts?.display,
+    fontWeight: '700',
   },
 });

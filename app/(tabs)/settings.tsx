@@ -3,9 +3,10 @@ import { useColors } from '@/hooks/use-colors';
 import { useStore } from '@/lib/store';
 import { Fonts } from '@/lib/_core/theme';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, View, Pressable, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Text, View, Pressable, ScrollView, Alert, Platform } from 'react-native';
+import { useState } from 'react';
+import { pickProfilePicture, getInitials, getAvatarColor } from '@/lib/profile-picture-service';
 import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
 import { UserRole } from '@/shared/app-types';
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -53,26 +54,62 @@ function SettingRow({
 export default function SettingsScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { state, dispatch } = useStore();
+  const { state, updateMember, dispatch } = useStore();
+  const [editingProfilePicture, setEditingProfilePicture] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [resetConfirmStep, setResetConfirmStep] = useState(0);
 
   const { userName, userRole, familyVault, members, memories } = state;
+  const isOrganizer = userRole === 'organizer';
+  const currentMember = members[0];
+
+  const handleUpdateProfilePicture = async () => {
+    if (!currentMember) return;
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const uri = await pickProfilePicture();
+    if (uri) {
+      updateMember({ ...currentMember, profilePictureUri: uri });
+      setEditingProfilePicture(false);
+    }
+  };
 
   const handleInvite = () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/invite' as never);
   };
 
-  const handleReset = () => {
+  const handleAdvancedPress = () => {
+    setShowAdvanced(!showAdvanced);
+  };
+
+  const handleResetStart = () => {
     Alert.alert(
-      'Reset Everything?',
-      'This will delete all your memories and settings. This cannot be undone.',
+      'Advanced Settings',
+      'This action will delete all memories and reset the vault. Are you absolutely sure?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Reset',
+          text: 'I understand the consequences',
+          style: 'destructive',
+          onPress: () => setResetConfirmStep(1),
+        },
+      ]
+    );
+  };
+
+  const handleResetConfirm = () => {
+    Alert.alert(
+      'Final Confirmation Required',
+      'This will permanently delete all memories. Type RESET to confirm.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'RESET',
           style: 'destructive',
           onPress: () => {
             dispatch({ type: 'RESET' });
+            setResetConfirmStep(0);
+            setShowAdvanced(false);
             router.replace('/onboarding/welcome' as never);
           },
         },
@@ -80,6 +117,55 @@ export default function SettingsScreen() {
     );
   };
 
+  // ELDER/RELATIVE: Minimal settings view
+  if (!isOrganizer) {
+    return (
+      <ScreenContainer containerClassName="bg-background">
+        <ScrollView
+          style={{ flex: 1, backgroundColor: 'transparent' }}
+          contentContainerStyle={[styles.container, { backgroundColor: 'transparent' }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: colors.foreground }]}>My Profile</Text>
+          </View>
+
+          {/* Profile Card */}
+          <View style={[styles.profileCard, { backgroundColor: colors.primary }]}>
+            <View style={styles.profileAvatar}>
+              <Text style={styles.profileAvatarText}>
+                {userName ? userName[0].toUpperCase() : '?'}
+              </Text>
+            </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>{userName || 'Unknown'}</Text>
+              <Text style={styles.profileRole}>{userRole ? ROLE_LABELS[userRole] : ''}</Text>
+            </View>
+          </View>
+
+          {/* Vault Info */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.muted }]}>Family Vault</Text>
+            <SettingRow
+              emoji="📖"
+              label={familyVault?.name ?? 'No vault'}
+              value={`${memories.length} stories`}
+            />
+          </View>
+
+          {/* Info Text */}
+          <View style={[styles.infoBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.infoText, { color: colors.foreground }]}>
+              You're part of {familyVault?.name || 'a family vault'}. You can record stories and view memories shared by family members.
+            </Text>
+          </View>
+        </ScrollView>
+      </ScreenContainer>
+    );
+  }
+
+  // ORGANIZER: Full admin settings
   return (
     <ScreenContainer containerClassName="bg-background">
       <ScrollView
@@ -163,15 +249,44 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Danger Zone */}
+        {/* Advanced Settings */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.muted }]}>Danger Zone</Text>
           <SettingRow
-            emoji="⚠️"
-            label="Reset Everything"
-            onPress={handleReset}
-            destructive
+            emoji="⚙️"
+            label="Advanced Settings"
+            value={showAdvanced ? 'Hide' : 'Show'}
+            onPress={handleAdvancedPress}
           />
+          {showAdvanced && (
+            <View style={[styles.advancedBox, { backgroundColor: colors.error, opacity: 0.1 }]}>
+              <Text style={[styles.advancedTitle, { color: colors.error }]}>Danger Zone</Text>
+              <Text style={[styles.advancedText, { color: colors.foreground }]}>
+                These actions cannot be undone.
+              </Text>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.advancedButton,
+                  { backgroundColor: colors.error },
+                  pressed && { opacity: 0.8 },
+                ]}
+                onPress={handleResetStart}
+              >
+                <Text style={styles.advancedButtonText}>Reset Everything</Text>
+              </Pressable>
+              {resetConfirmStep === 1 && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.advancedButton,
+                    { backgroundColor: colors.error, marginTop: 8 },
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  onPress={handleResetConfirm}
+                >
+                  <Text style={styles.advancedButtonText}>Confirm Reset</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
         </View>
 
         {/* App Info */}
@@ -289,5 +404,40 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     marginTop: 8,
+  },
+  infoBox: {
+    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  infoText: {
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  advancedBox: {
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 8,
+    gap: 12,
+  },
+  advancedTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  advancedText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  advancedButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  advancedButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

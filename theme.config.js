@@ -1,25 +1,24 @@
 /** @type {const} */
 const themeColors = {
-  // Primary action color — warm burnished copper, readable on dark wood
-  primary: { light: '#C4845A', dark: '#D4956A' },
-  // Accent — lighter terracotta for highlights
-  accent: { light: '#D4A574', dark: '#E0B888' },
-  // Backgrounds — transparent so wood shows through; used for ScrollView contentContainerStyle
-  // These are intentionally near-transparent warm tints, not solid fills
-  background: { light: 'rgba(30, 16, 6, 0.0)', dark: 'rgba(10, 5, 2, 0.0)' },
-  // Surface — frosted warm parchment over the wood grain
-  surface: { light: 'rgba(245, 225, 195, 0.15)', dark: 'rgba(245, 225, 195, 0.10)' },
-  // Text — warm ivory, high contrast over the dark overlay
-  foreground: { light: '#F5E8D5', dark: '#F5E8D5' },
-  muted: { light: '#C4A882', dark: '#B09060' },
-  // UI chrome
-  border: { light: 'rgba(210, 175, 130, 0.35)', dark: 'rgba(210, 175, 130, 0.20)' },
+  // Primary — dark leafy green for text and key actions
+  primary: { light: '#2d5016', dark: '#2d5016' },
+  // Accent — lighter sage green for highlights
+  accent: { light: '#5a8c3a', dark: '#6fa844' },
+  // Background — aged whitish wood tone
+  background: { light: '#f5f1ed', dark: '#e8e3de' },
+  // Surface — lighter wood tone for cards and elevated areas
+  surface: { light: '#e8ddf5', dark: '#ddd2c8' },
+  // Text — dark green for excellent contrast on light wood
+  foreground: { light: '#2d5016', dark: '#2d5016' },
+  muted: { light: '#6b6b5f', dark: '#7a7a6f' },
+  // UI chrome — subtle wood grain borders
+  border: { light: '#d4ccc0', dark: '#c9c1b5' },
   // States
-  success: { light: '#5A9E68', dark: '#6AAE78' },
-  warning: { light: '#C4903A', dark: '#D4A84A' },
-  error: { light: '#C05040', dark: '#D06050' },
+  success: { light: '#5a8c3a', dark: '#6fa844' },
+  warning: { light: '#b8860b', dark: '#d4a017' },
+  error: { light: '#8b4513', dark: '#a0522d' },
   // Tint alias
-  tint: { light: '#C4845A', dark: '#D4956A' },
+  tint: { light: '#2d5016', dark: '#2d5016' },
 };
 
 module.exports = { themeColors };
