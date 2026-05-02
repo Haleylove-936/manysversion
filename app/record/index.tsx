@@ -266,30 +266,30 @@ export default function RecordScreen() {
           )}
         </View>
 
-        {/* Mode Selector */}
-        {!isRecording && (
-          <View style={[styles.modeRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            {MODE_OPTIONS.map(opt => (
-              <Pressable
-                key={opt.key}
-                style={({ pressed }) => [
-                  styles.modeBtn,
-                  mode === opt.key && { backgroundColor: colors.primary },
-                  pressed && { opacity: 0.75 },
-                ]}
-                onPress={() => handleModeChange(opt.key)}
-              >
-                <Text style={styles.modeBtnEmoji}>{opt.emoji}</Text>
-                <Text style={[
-                  styles.modeBtnLabel,
-                  { color: mode === opt.key ? '#FFFFFF' : colors.muted },
-                ]}>
-                  {opt.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
+        {/* Mode Selector - Always Visible */}
+        <View style={[styles.modeRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {MODE_OPTIONS.map(opt => (
+            <Pressable
+              key={opt.key}
+              style={({ pressed }) => [
+                styles.modeBtn,
+                mode === opt.key && { backgroundColor: colors.primary },
+                isRecording && { opacity: 0.5 },
+                pressed && !isRecording && { opacity: 0.75 },
+              ]}
+              onPress={() => handleModeChange(opt.key)}
+              disabled={isRecording}
+            >
+              <Text style={styles.modeBtnEmoji}>{opt.emoji}</Text>
+              <Text style={[
+                styles.modeBtnLabel,
+                { color: mode === opt.key ? '#FFFFFF' : colors.muted },
+              ]}>
+                {opt.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
 
         {/* ── AUDIO MODE ── */}
         {mode === 'audio' && (
