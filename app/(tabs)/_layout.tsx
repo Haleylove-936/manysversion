@@ -61,16 +61,22 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="book.fill" color={color} />,
         }}
       />
-      {/* Search - Hidden for Elder */}
-      {!isElder && (
-        <Tabs.Screen
-          name="search"
-          options={{
-            title: 'Search',
-            tabBarIcon: ({ color }) => <IconSymbol size={26} name="magnifyingglass" color={color} />,
-          }}
-        />
-      )}
+      {/* Search - Available to all */}
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: 'Search',
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="magnifyingglass" color={color} />,
+        }}
+      />
+      {/* Timeline - Family social feed */}
+      <Tabs.Screen
+        name="timeline"
+        options={{
+          title: 'Timeline',
+          tabBarIcon: ({ color }) => <IconSymbol size={26} name="calendar" color={color} />,
+        }}
+      />
       <Tabs.Screen
         name="settings"
         options={{

@@ -56,6 +56,8 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { state, updateMember, dispatch } = useStore();
   const [editingProfilePicture, setEditingProfilePicture] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [resetConfirmStep, setResetConfirmStep] = useState(0);
 
   const { userName, userRole, familyVault, members, memories } = state;
   const isOrganizer = userRole === 'organizer';
@@ -76,17 +78,38 @@ export default function SettingsScreen() {
     router.push('/invite' as never);
   };
 
-  const handleReset = () => {
+  const handleAdvancedPress = () => {
+    setShowAdvanced(!showAdvanced);
+  };
+
+  const handleResetStart = () => {
     Alert.alert(
-      'Reset Everything?',
-      'This will delete all your memories and settings. This cannot be undone.',
+      'Advanced Settings',
+      'This action will delete all memories and reset the vault. Are you absolutely sure?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Reset',
+          text: 'I understand the consequences',
+          style: 'destructive',
+          onPress: () => setResetConfirmStep(1),
+        },
+      ]
+    );
+  };
+
+  const handleResetConfirm = () => {
+    Alert.alert(
+      'Final Confirmation Required',
+      'This will permanently delete all memories. Type RESET to confirm.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'RESET',
           style: 'destructive',
           onPress: () => {
             dispatch({ type: 'RESET' });
+            setResetConfirmStep(0);
+            setShowAdvanced(false);
             router.replace('/onboarding/welcome' as never);
           },
         },
@@ -226,15 +249,44 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Danger Zone */}
+        {/* Advanced Settings */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.muted }]}>Danger Zone</Text>
           <SettingRow
-            emoji="⚠️"
-            label="Reset Everything"
-            onPress={handleReset}
-            destructive
+            emoji="⚙️"
+            label="Advanced Settings"
+            value={showAdvanced ? 'Hide' : 'Show'}
+            onPress={handleAdvancedPress}
           />
+          {showAdvanced && (
+            <View style={[styles.advancedBox, { backgroundColor: colors.error, opacity: 0.1 }]}>
+              <Text style={[styles.advancedTitle, { color: colors.error }]}>Danger Zone</Text>
+              <Text style={[styles.advancedText, { color: colors.foreground }]}>
+                These actions cannot be undone.
+              </Text>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.advancedButton,
+                  { backgroundColor: colors.error },
+                  pressed && { opacity: 0.8 },
+                ]}
+                onPress={handleResetStart}
+              >
+                <Text style={styles.advancedButtonText}>Reset Everything</Text>
+              </Pressable>
+              {resetConfirmStep === 1 && (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.advancedButton,
+                    { backgroundColor: colors.error, marginTop: 8 },
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  onPress={handleResetConfirm}
+                >
+                  <Text style={styles.advancedButtonText}>Confirm Reset</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
         </View>
 
         {/* App Info */}
@@ -362,5 +414,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     textAlign: 'center',
+  },
+  advancedBox: {
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 8,
+    gap: 12,
+  },
+  advancedTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  advancedText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  advancedButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  advancedButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
