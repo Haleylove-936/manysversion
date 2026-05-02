@@ -20,6 +20,7 @@ type Action =
   | { type: 'DELETE_MEMORY'; payload: { id: string } }
   | { type: 'UPDATE_MEMORY'; payload: Memory }
   | { type: 'ADD_MEMBER'; payload: FamilyMember }
+  | { type: 'UPDATE_MEMBER'; payload: FamilyMember }
   | { type: 'ADVANCE_PROMPT' }
   | { type: 'SET_REMINDER_TIME'; payload: string }
   | { type: 'MARK_PROMPT_DELIVERED'; payload: string }
@@ -88,6 +89,11 @@ function reducer(state: AppState, action: Action): AppState {
     }
     case 'ADD_MEMBER':
       return { ...state, members: [...state.members, action.payload] };
+    case 'UPDATE_MEMBER':
+      return {
+        ...state,
+        members: state.members.map(m => (m.id === action.payload.id ? action.payload : m)),
+      };
     case 'ADVANCE_PROMPT':
       return { ...state, currentPromptIndex: state.currentPromptIndex + 1 };
     case 'SET_REMINDER_TIME':
@@ -107,6 +113,7 @@ interface StoreContextValue {
   addMemory: (memory: Memory) => void;
   deleteMemory: (id: string) => void;
   updateMemory: (memory: Memory) => void;
+  updateMember: (member: FamilyMember) => void;
   completeOnboarding: (role: UserRole, name: string, vaultName: string) => void;
   advancePrompt: () => void;
   setReminderTime: (time: string) => void;
@@ -151,6 +158,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'UPDATE_MEMORY', payload: memory });
   }, []);
 
+  const updateMember = useCallback((member: FamilyMember) => {
+    dispatch({ type: 'UPDATE_MEMBER', payload: member });
+  }, []);
+
   const completeOnboarding = useCallback((role: UserRole, name: string, vaultName: string) => {
     const vault: FamilyVault = {
       id: Date.now().toString(),
@@ -183,7 +194,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <StoreContext.Provider
-      value={{ state, dispatch, addMemory, deleteMemory, updateMemory, completeOnboarding, advancePrompt, setReminderTime, markPromptDelivered, addComment, toggleReaction }}
+      value={{ state, dispatch, addMemory, deleteMemory, updateMemory, updateMember, completeOnboarding, advancePrompt, setReminderTime, markPromptDelivered, addComment, toggleReaction }}
     >
       {children}
     </StoreContext.Provider>

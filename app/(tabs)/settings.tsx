@@ -3,9 +3,10 @@ import { useColors } from '@/hooks/use-colors';
 import { useStore } from '@/lib/store';
 import { Fonts } from '@/lib/_core/theme';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, View, Pressable, ScrollView, Alert } from 'react-native';
+import { StyleSheet, Text, View, Pressable, ScrollView, Alert, Platform } from 'react-native';
+import { useState } from 'react';
+import { pickProfilePicture, getInitials, getAvatarColor } from '@/lib/profile-picture-service';
 import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
 import { UserRole } from '@/shared/app-types';
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -53,9 +54,21 @@ function SettingRow({
 export default function SettingsScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { state, dispatch } = useStore();
+  const { state, updateMember } = useStore();
+  const [editingProfilePicture, setEditingProfilePicture] = useState(false);
 
   const { userName, userRole, familyVault, members, memories } = state;
+  const currentMember = members[0];
+
+  const handleUpdateProfilePicture = async () => {
+    if (!currentMember) return;
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const uri = await pickProfilePicture();
+    if (uri) {
+      updateMember({ ...currentMember, profilePictureUri: uri });
+      setEditingProfilePicture(false);
+    }
+  };
 
   const handleInvite = () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
